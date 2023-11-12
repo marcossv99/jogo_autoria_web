@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+  <title>Labirinto</title>
+</head>
+<body>
+  <canvas id="labirintoCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('labirintoCanvas');
+    const ctx = canvas.getContext('2d');
+    const cellSize = 20;
+    const rows = Math.floor(canvas.height / cellSize);
+    const cols = Math.floor(canvas.width / cellSize);
+    const maze = [];
+
+    function initMaze() {
+      for (let i = 0; i < rows; i++) {
+        maze[i] = [];
+        for (let j = 0; j < cols; j++) {
+          maze[i][j] = {
+            topWall: true,
+            rightWall: true,
+            bottomWall: true,
+            leftWall: true,
+            visited: false
+          };
+        }
+      }
+    }
+
+    function drawMaze() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          const x = j * cellSize;
+          const y = i * cellSize;
+
+          if (maze[i][j].topWall) drawLine(x, y, x + cellSize, y, 'top');
+          if (maze[i][j].rightWall) drawLine(x + cellSize, y, x + cellSize, y + cellSize, 'right');
+          if (maze[i][j].bottomWall) drawLine(x + cellSize, y + cellSize, x, y + cellSize, 'bottom');
+          if (maze[i][j].leftWall) drawLine(x, y + cellSize, x, y, 'left');
+        }
+      }
+    }
+
+    function drawLine(startX, startY, endX, endY, side) {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+
+    function generateMaze(currentRow, currentCol) {
+      maze[currentRow][currentCol].visited = true;
+
+      const directions = ['top', 'right', 'bottom', 'left'];
+      directions.sort(() => Math.random() - 0.5);
+
+      for (const direction of directions) {
+        let newRow = currentRow;
+        let newCol = currentCol;
+
+        switch (direction) {
+          case 'top':
+            newRow -= 1;
+            break;
+          case 'right':
+            newCol += 1;
+            break;
+          case 'bottom':
+            newRow += 1;
+            break;
+          case 'left':
+            newCol -= 1;
+            break;
+        }
+
+        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !maze[newRow][newCol].visited) {
+          maze[currentRow][currentCol][`${direction}Wall`] = false;
+          maze[newRow][newCol][`${oppositeDirection(direction)}Wall`] = false;
+          generateMaze(newRow, newCol);
+        }
+      }
+    }
+
+    function oppositeDirection(direction) {
+      switch (direction) {
+        case 'top':
+          return 'bottom';
+        case 'right':
+          return 'left';
+        case 'bottom':
+          return 'top';
+        case 'left':
+          return 'right';
+      }
+    }
+
+    function startMazeGeneration() {
+      initMaze();
+      generateMaze(0, 0);
+      drawMaze();
+    }
+
+    startMazeGeneration();
+  </script>
+</body>
+</html>
